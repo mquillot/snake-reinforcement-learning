@@ -24,7 +24,7 @@ setup(name='pysnake',
         author_email = 'arthur.dujardin@ensg.eu',
         license = 'Apache License-2.0',
 
-        install_requires = ['pygame', 'numpy', 'json'],
+        install_requires = ['pygame', 'numpy'],
         packages = find_packages(),
         zip_safe  = False,
         classifiers = [
