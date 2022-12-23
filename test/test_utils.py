@@ -8,7 +8,7 @@ rd.seed(42)
 
 
 # Import PySnake modules
-from pysnake.enum import Item
+from pysnake.enumerations import Item
 from pysnake.grid import Cell
 
 from pysnake.utils import cell_to_coord, cell_to_name, cell_to_item

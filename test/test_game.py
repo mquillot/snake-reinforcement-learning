@@ -2,7 +2,7 @@
 # Created on Wed Feb 19 20:29:15 2020
 # @author: arthurd
 
-from pysnake.enum import Item
+from pysnake.enumerations import Item
 from pysnake import Game, Cell
 
 
