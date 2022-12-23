@@ -3,7 +3,7 @@
 # @author: arthurd
 
 
-from pysnake.enum import Item
+from pysnake.enumerations import Item
 
 
 class Cell:

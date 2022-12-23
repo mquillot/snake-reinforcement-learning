@@ -3,7 +3,7 @@
 # @author: arthurd
 
 
-from pysnake.enum import Direction, Item
+from pysnake.enumerations import Direction, Item
 
 from pysnake.windraw import WindowGame
 from pysnake.grid import Cell, Grid

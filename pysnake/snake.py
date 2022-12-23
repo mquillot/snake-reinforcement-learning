@@ -10,13 +10,15 @@ import random as rd
 from pysnake.utils import one_hot_direction
 # Snake Game
 from pysnake.vision import FullVision
-from pysnake.enum import Direction, Item
+from pysnake.enumerations import Direction, Item
 from pysnake.grid import Cell
 # Neural Network
 from pysnake.nn.neuralnetwork import NeuralNetwork
 # Genetic Algo
 from pysnake.gen.individual import Individual
 from pysnake.gen.chromosome import Chromosome
+
+import torch
 
 
 
@@ -123,9 +125,12 @@ class Snake(Individual):
         
         # Neural Network
         self.nn_hidden_layers = nn_hidden_layers
-        self.nn_layers_dimension = [self.vision_mode*3 + 4*2] + list(self.nn_hidden_layers) + [4]
+        self.nn_layers_dimension = [self.game.shape[0] * self.game.shape[1] * 5] + list(self.nn_hidden_layers) + [4]
         params = self.decode_chromosomes(chromosomes) if chromosomes is not None else nn_params
+        
+
         self.nn = NeuralNetwork(self.nn_layers_dimension, params=params)
+
         # Initialize the first activation (the value is used to display the neurons)
         self.next_direction()
         self.nn_params = self.nn.params
@@ -377,7 +382,14 @@ class Snake(Individual):
     
     def compute_input(self):
         """
-        Vectorize the snake's vision and its directions.
+        Create multiple matrix for the map.
+        First matrix: Wall
+        Second matrix: Snake
+        Third matrix: Snake head
+        Fourth matrix: Snake tail
+        Fifth matrix: Apple
+        
+        Maybe we also add its directions?
 
         Returns
         -------
@@ -385,29 +397,54 @@ class Snake(Individual):
             One column vector of shape (size_input, 1) used as input vector
             in the neural network.
         """
-        # Set the input array for the neural network
-        X = np.array([])
-        # Binary vision
-        if self.vision_type == "binary":
-            for vision in self.full_vision:
-                X = np.concatenate((X, vision.to_binary()))
-        # Distance mode
-        else:
-            for vision in self.full_vision:
-                distances = vision.to_distances()
-                normalized_distances = np.divide(1, distances, 
-                                                 out=np.zeros_like(distances), 
-                                                 where=distances!=0)
-                X = np.concatenate((X, normalized_distances))
+        # get the full map
+        full_map = np.asarray(self.game.grid.values)
+        # Note: full_map values with enum of Item available in enum.py
+
+        # compute three matrices from the map:
+        map_wall = np.zeros(full_map.shape)
+        map_wall[full_map == Item.EMPTY] = 0
+        map_wall[full_map == Item.WALL] = 1
+
+        map_snake = np.zeros(full_map.shape)
+        map_snake[full_map == Item.EMPTY] = 0
+        map_snake[full_map == Item.SNAKE] = 1
+
+        map_apple = np.zeros(full_map.shape)
+        map_apple[full_map == Item.APPLE] = 1
+        map_apple[full_map == Item.EMPTY] = 0
+
+        # compute two other matrices about head and tail
+        head = self.body[-1]
+        map_head = np.zeros(full_map.shape)
+        map_head[head.coord] = 1
+
+
+        tail = self.body[0]
+        map_tail = np.zeros(full_map.shape)
+        map_tail[tail.coord] = 1
+
+        X = np.expand_dims(np.stack((
+            map_wall,
+            map_snake,
+            map_apple,
+            map_head,
+            map_tail
+        )).flatten(), axis=1)
+
+        return X
         
-        # Add the one hot encoded direction vectors
-        one_hot_tail = one_hot_direction(self.tail_direction)
-        X = np.concatenate((X, one_hot_tail))
-        # Idem for its direction
-        one_hot = one_hot_direction(self.direction)
-        X = np.concatenate((X, one_hot))
+        # Note: few lines for tensoring all
+        # put these 5 matrices in one tensor
+        # return torch.from_numpy(np.stack((
+        #     map_wall,
+        #     map_snake,
+        #     map_apple,
+        #     map_head,
+        #     map_tail
+        # )))
+
                 
-        return X[:, np.newaxis]
     
     
     def compute_output(self, X):
@@ -425,7 +462,6 @@ class Snake(Individual):
         Y_hat : numpy.ndarray
             Predicted output of shape (num_class, 1).
         """
-        
         Y_hat = self.nn.forward(X)
         return Y_hat
     
@@ -442,6 +478,7 @@ class Snake(Individual):
         X = self.compute_input()
         Y = self.compute_output(X)
         # Get the new direction by  the predicted class * 90 (to get the degrees)
+
         next_direction = Direction(np.argmax(Y) * 90)
         # The snake should follow this new direction
         return next_direction

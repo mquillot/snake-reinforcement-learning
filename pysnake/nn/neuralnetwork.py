@@ -76,7 +76,7 @@ class NeuralNetwork(object):
         layer_dimensions = self.layer_dimensions
         depth = len(layer_dimensions) - 1
         # 1/ Iterates through the depth of the neural network
-        Z = X_batch   
+        Z = X_batch
         self.params['A_0'] = Z
         for i in range(1, depth + 1):
             # 1.1/ Get the weights and biases from the params       

@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 # Useful packages
 import numpy as np
 # PySnake modules
-from pysnake.enum import Item
+from pysnake.enumerations import Item
 
 
 

@@ -6,6 +6,7 @@
 # Useful packages
 import os
 import numpy as np
+import tqdm
 import random as rd
 # Test if pygame is installed
 try:
@@ -14,7 +15,7 @@ except ModuleNotFoundError:
     print("Module PyGame is not installed.\nEither install this package or turn off the 'render' parameter in the config.ini file.")
 
 # PySnake modules
-from pysnake.enum import Item, Direction
+from pysnake.enumerations import Item, Direction
 from pysnake.grid import Cell, Grid
 from pysnake.snake import Snake
 from pysnake.windraw import WindowGame
@@ -423,7 +424,7 @@ class GameApplication:
             next_individuals = []  # For setting next population
             
             # Play all snakes in their games environment
-            for i in range(self.num_population):                
+            for i in tqdm.tqdm(range(self.num_population)):                
                 chromosomes = population.individuals[i].chromosomes
                 snake = Snake(self.game, chromosomes=chromosomes, **self.snake_params)
                 self.game.start(snake)
@@ -476,6 +477,7 @@ class GameApplication:
             print("best fitness: {0:2.3E}".format(population.fittest.fitness), end = " | ")
             print("best score  : {0:2d}".format(population.fittest.score), end = " | ")
             print("lifespan    : {0:3d}".format( population.fittest.lifespan), end = " | ")
+            print()
             
             # Get best individuals from current pop
             best_from_pop = population.select_elitism(self.num_parents)
